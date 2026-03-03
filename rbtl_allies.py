@@ -1,41 +1,8 @@
-# rbtl_allies.py
-#
-# Single-file Ally Generator (refactor-friendly, minimal script sprawl).
-#
-# REQUIREMENTS / ASSUMPTIONS
-# - You already have rbtl_data.py providing DataBundle with:
-#     data.items, data.spells, data.traits,
-#     data.ally_names, data.ally_classes, data.ally_backgrounds
-# - You already have rbtl_core.py providing:
-#     parse_statline(stat_str) -> dict
-#     apply_stat_mods(stats_dict, mod_str)
-#     STAT_KEYS (ordered list of stats for printing)
-#
-# LOCKED (as per your project):
-# - Allies only, batch generation, single output file, no state tracking
-# - Trait-based naming + animal naming rule
-# - Tags drive eligibility
-# - Step 5 item randomization: Mode A placeholder replacement; Mode B optional (currently no-op)
-# - NO duplicates for spells OR traits per ally across all sources (class/background/inline/step4)
-#
-# LOCKED ROLL GRAMMAR (canonical kinds):
-#   weapons, spells, item, herb, armor, traits
-# - weapons is a FILTERED roll from items.txt via tags: hand/twohand/ranged
-# - spells from spells.txt
-# - traits from traits.txt (excludes enemy_only by default)
+# This is the patched rbtl_allies.py
+# Changes:
+#   - _parse_roll_params: preserve count=all and count=fillN as strings
+#   - apply_roll_field: handle count=all (grab all matching) and count=fillN (fill to total N)
 
-# rbtl_allies.py
-#
-# ally Generator (single module).
-#
-# Locked design rules supported:
-# - allies only, batch, single output
-# - Trait-based naming + animal naming rule
-# - Tags drive eligibility
-# - Step 5 item randomization: placeholder replacement (Mode A); Mode B stubbed
-# - No duplicates for spells or traits per ally (across class/background/trait-step/roll-tokens)
-
-# rbtl_allies.py
 from __future__ import annotations
 
 import os
@@ -57,7 +24,6 @@ TRAIT_DISTRIBUTION = [
     (1.00, 2),
 ]
 
-# Tags that imply an item is a weapon inside items.txt
 WEAPON_TAGS = {"hand", "twohand", "ranged"}
 
 
@@ -75,7 +41,7 @@ def eligible_by_tags(entry: Dict[str, Any], required: Optional[Set[str]]) -> boo
         return True
     et = entry_tags(entry)
     if not et:
-        return True  # tagless entries are universal
+        return True
     return bool(et.intersection(required))
 
 
@@ -124,6 +90,10 @@ def _parse_roll_params(rest: str) -> Dict[str, str]:
     Accepts both:
       spells:tag=spells:count=2
       spells:tag=spells,count=2
+
+    Special count values preserved as strings (not parsed as int):
+      count=all    -> grab all matching entries
+      count=fillN  -> fill total abilities to N (e.g. fill3 = fill to 3 total)
     """
     if not rest:
         return {}
@@ -156,6 +126,17 @@ def _pick_unique(pool: List[Dict[str, Any]], *, count: int, exclude: Set[str]) -
             break
         picks.append(chosen)
         exclude.add(chosen.get("name"))
+    return picks
+
+
+def _pick_all_unique(pool: List[Dict[str, Any]], *, exclude: Set[str]) -> List[Dict[str, Any]]:
+    """Grab all entries from pool not already in exclude set."""
+    picks = []
+    for e in pool:
+        name = e.get("name")
+        if name and name not in exclude:
+            picks.append(e)
+            exclude.add(name)
     return picks
 
 
@@ -248,8 +229,12 @@ def apply_roll_field(
 ) -> None:
     """
     roll_field supports semicolon-separated directives:
-      spells:tag=spells:count=2; weapons:tag=hand
+      spells:tag=knight,core:count=all; spells:tag=knight:count=fill3
       traits:tag=magic:count=1
+
+    count=all   -> grab every matching entry not already picked
+    count=fillN -> pick from pool until ally["spells"] total reaches N
+    count=N     -> pick exactly N (original behavior)
     """
     if not roll_field:
         return
@@ -264,19 +249,48 @@ def apply_roll_field(
         kind = kind.strip().lower()
         params = _parse_roll_params(rest)
 
-        count = max(1, parse_int_maybe(params.get("count"), 1))
+        count_raw = params.get("count", "1").strip().lower()
         req = {t.strip().lower() for t in (params.get("tag", "").split(",")) if t.strip()} if "tag" in params else None
 
-        # Track roll diagnostics
-        ctx["debug_rolls"].append(f"{source_label}: {kind} (tag={','.join(sorted(req)) if req else 'ANY'}, count={count})")
+        # Parse special count modes
+        count_mode = "fixed"  # "fixed", "all", "fill"
+        fill_target = 0
+        count = 1
 
-        # Normalize synonyms to be forgiving
+        if count_raw == "all":
+            count_mode = "all"
+        elif count_raw.startswith("fill"):
+            count_mode = "fill"
+            try:
+                fill_target = int(count_raw[4:])
+            except ValueError:
+                fill_target = 3  # sane fallback
+        else:
+            count = max(1, parse_int_maybe(count_raw, 1))
+
+        # Build debug label
+        tag_str = ",".join(sorted(req)) if req else "ANY"
+        ctx["debug_rolls"].append(f"{source_label}: {kind} (tag={tag_str}, count={count_raw})")
+
+        # Normalize synonyms
         if kind in ("spell", "spells"):
             pool = _pool_spells(data, req)
-            picks = _pick_unique(pool, count=count, exclude=ctx["picked_spells"])
+
+            if count_mode == "all":
+                picks = _pick_all_unique(pool, exclude=ctx["picked_spells"])
+
+            elif count_mode == "fill":
+                current_total = len(ally["spells"])
+                need = max(0, fill_target - current_total)
+                picks = _pick_unique(pool, count=need, exclude=ctx["picked_spells"])
+
+            else:
+                picks = _pick_unique(pool, count=count, exclude=ctx["picked_spells"])
+
             for p in picks:
                 ally["spells"].append(p["name"])
-            if len(picks) < count:
+
+            if count_mode == "fixed" and len(picks) < count:
                 ctx["warnings"].append(
                     f"[{source_label}] roll:{kind} requested {count} but got {len(picks)} "
                     f"(pool={len(pool)}, tag={req or 'ANY'}, uniqueness exhausted or no matches)"
@@ -332,7 +346,6 @@ def apply_roll_field(
             continue
 
         if kind in ("ability", "abilities"):
-            # optional pattern: pull from spells list tagged abilities if you ever do that
             pool = _pool_spells(data, req)
             picks = _pick_unique(pool, count=count, exclude=ctx["picked_abilities"])
             for p in picks:
@@ -344,7 +357,7 @@ def apply_roll_field(
                 )
             continue
 
-        # Unknown kind: warn
+        # Unknown kind
         ctx["warnings"].append(f"[{source_label}] Unknown roll kind '{kind}' in directive '{raw}' (ignored)")
 
 
@@ -435,7 +448,7 @@ def _resolve_item_entry(name: str, data: DataBundle) -> Dict[str, Any]:
 
 
 # ============================================================
-# #LABEL: GENERATE ONE ally
+# #LABEL: GENERATE ONE ALLY
 # ============================================================
 
 def generate_ally(
@@ -452,9 +465,9 @@ def generate_ally(
         "picked_spells": set(),
         "picked_traits": set(),
         "picked_abilities": set(),
-        "picked_items": set(),     # NEW: prevents duplicate items per ally
-        "warnings": [],            # NEW: collects warnings for debug footer
-        "debug_rolls": [],         # NEW: roll diagnostics lines
+        "picked_items": set(),
+        "warnings": [],
+        "debug_rolls": [],
     }
 
     # ---- Class selection ----
@@ -535,7 +548,6 @@ def generate_ally(
                     merchant_level=merchant_level,
                 )
             else:
-                # NEW: prevent duplicate literal gear items too
                 if tok not in ctx["picked_items"]:
                     ally["items"].append(_resolve_item_entry(tok, data))
                     ctx["picked_items"].add(tok)
@@ -558,7 +570,7 @@ def generate_ally(
                 merchant_level=merchant_level,
             )
 
-    # Optional: background extra trait roll field (future use)
+    # Optional: background extra trait roll field
     if allow_background_trait_rolls:
         tr = (bg.get("trait_roll") or "").strip()
         if tr:
@@ -755,11 +767,9 @@ def generate_allies(data: DataBundle, inputs: Dict[str, Any]) -> Tuple[str, str]
     used_names: Set[str] = set()
     allies: List[Dict[str, Any]] = []
 
-    # For glossary grouping
     used_items: Dict[str, Dict[str, Any]] = {}
     used_skill_status: Set[str] = set()
 
-    # For debug footer (global)
     debug_warnings: List[str] = []
     debug_rolls: List[str] = []
 
@@ -782,7 +792,7 @@ def generate_allies(data: DataBundle, inputs: Dict[str, Any]) -> Tuple[str, str]
             used_skill_status.update(_item_skill_names(it))
 
         used_skill_status.update(c.get("spells", []))
-        used_skill_status.update(c.get("abilities", []))  # abilities share glossary grouping
+        used_skill_status.update(c.get("abilities", []))
 
         ctx = c.get("_ctx", {})
         debug_warnings.extend(ctx.get("warnings", []))
@@ -856,4 +866,3 @@ def generate_allies(data: DataBundle, inputs: Dict[str, Any]) -> Tuple[str, str]
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"allies_{stamp}.txt"
     return filename, text
-
