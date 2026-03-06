@@ -1,5 +1,5 @@
-# rbtl_hub.py
-"""Rangers at the Borderlands — Hub Launcher
+# bare_hub.py
+"""Blades at Realm’s Edge — Hub Launcher
 
 Single entry-point to launch any generator from one menu.
 
@@ -99,7 +99,7 @@ def _apply_seed(seed: Optional[int]) -> None:
         return
     random.seed(seed)
     # Optional: makes the seed visible to downstream scripts if they want to read it.
-    os.environ["RBTL_SEED"] = str(seed)
+    os.environ["BARE_SEED"] = str(seed)
 
 
 def run_scenario(data: DataBundle, project_root: str) -> None:
@@ -345,7 +345,7 @@ def main() -> None:
         while True:
             subtitle = _data_summary(data)
             seed_note = f" | Seed={args.seed}" if args.seed is not None else ""
-            print(f"\n[RBTL Hub] {subtitle}{seed_note}")
+            print(f"\n[BARE Hub] {subtitle}{seed_note}")
 
             options = [e.label for e in ENTRIES] + [
                 "Validate & Reload Data",

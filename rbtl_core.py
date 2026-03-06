@@ -31,7 +31,7 @@ from rbtl_shared import (
 )
 
 # ============================================================
-# RBTL DEV RULES — IO + Architecture Guardrails (REFERENCE)
+# BARE DEV RULES — IO + Architecture Guardrails (REFERENCE)
 # ============================================================
 #
 # [IO / DATA LOADING]
@@ -89,9 +89,9 @@ from rbtl_shared import (
 # RULE: Core modules do not read /data directly.
 # If you need a dataset, add it to DataBundle in rbtl_data.py and pass it in.
 # ============================================================
-# rbtl_core.py
+# bare_core.py
 # ============================================================
-# Rangers at the Borderlands — Core Scenario Generator (IO-FREE)
+# Blades at Realm’s Edge — Core Scenario Generator (IO-FREE)
 # - Consumes: DataBundle (from rbtl_data.load_data_bundle)
 # - Produces: (suggested_filename, briefing_text)
 # - No filesystem reads, no output writes, no PROJECT_ROOT/DATA_DIR globals
@@ -202,7 +202,7 @@ def _campaign_biome_id_from_key(raw_key: str) -> str:
     parts = [p for p in key.split("-") if p != ""]
     if len(parts) < 8:
         return ""
-    if parts[0] != "RBTL" or parts[1] != "CAMP":
+    if parts[0] not in {"BARE", "RBTL"} or parts[1] != "CAMP":
         return ""
     return parts[3]
 

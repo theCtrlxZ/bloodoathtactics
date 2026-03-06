@@ -1,4 +1,4 @@
-"""Shared logic for Rangers at the Borderlands (IO-free helpers).
+"""Shared logic for Blades at Realm’s Edge (IO-free helpers).
 
 This module centralizes cross-script helpers so CLI and core stay in sync
 without duplicating logic in multiple files.

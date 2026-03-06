@@ -1,6 +1,6 @@
-# rbtl_loot.py
+# bare_loot.py
 # ============================================================
-# Rangers at the Borderlands — Loot + Shop Generator (IO-FREE)
+# Blades at Realm’s Edge — Loot + Shop Generator (IO-FREE)
 #
 # Reads from DataBundle:
 #   - items (items.txt)

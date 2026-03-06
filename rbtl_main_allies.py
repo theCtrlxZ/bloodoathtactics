@@ -1,4 +1,4 @@
-# rbtl_main_allies.py
+# bare_main_allies.py
 import os
 
 from rbtl_data import load_data_bundle

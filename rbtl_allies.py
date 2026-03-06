@@ -1,4 +1,4 @@
-# This is the patched rbtl_allies.py
+# This is the patched bare_allies.py
 # Changes:
 #   - _parse_roll_params: preserve count=all and count=fillN as strings
 #   - apply_roll_field: handle count=all (grab all matching) and count=fillN (fill to total N)

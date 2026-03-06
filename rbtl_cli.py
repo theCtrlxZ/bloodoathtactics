@@ -1,4 +1,4 @@
-# rbtl_cli.py
+# bare_cli.py
 import hashlib
 import random
 from typing import Any, Dict, List, Optional, Tuple
@@ -34,7 +34,7 @@ def _parse_campaign_key(raw: str) -> Optional[Dict[str, Any]]:
     parts = [p for p in key.split("-") if p != ""]
     if len(parts) < 8:
         return None
-    if parts[0] != "RBTL" or parts[1] != "CAMP":
+    if parts[0] not in {"BARE", "RBTL"} or parts[1] != "CAMP":
         return None
 
     seed = None

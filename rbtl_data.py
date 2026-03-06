@@ -1,7 +1,7 @@
-# rbtl_data.py
+# bare_data.py
 
 # ============================================================
-# RBTL DEV RULES — IO + Architecture Guardrails (REFERENCE)
+# BARE DEV RULES — IO + Architecture Guardrails (REFERENCE)
 # ============================================================
 # (Keep these as comment-only rules to prevent “mystery bugs.”)
 #
@@ -61,7 +61,7 @@
 # If you need a dataset, add it to DataBundle in rbtl_data.py and pass it in.
 # ============================================================
 
-# rbtl_data.py
+# bare_data.py
 from __future__ import annotations
 
 import os

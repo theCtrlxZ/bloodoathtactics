@@ -1,5 +1,5 @@
 # ============================================================
-# ITEM COMPONENTS — Bloodoath Tactics
+# ITEM COMPONENTS — Blades at Realm’s Edge
 # Weapon materials: base damage includes weapon type modifier added on top
 # Armor materials: modifiers applied to base armor tier
 # Format: id|Name|fields...|tag=...|merchant_level=N

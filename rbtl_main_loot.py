@@ -1,4 +1,4 @@
-# rbtl_main_loot.py
+# bare_main_loot.py
 import os
 
 from rbtl_data import load_data_bundle

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 settings = """# ============================================================
-# SETTINGS — Rangers at the Borderlands (v1 lock candidate)
+# SETTINGS — Blades at Realm’s Edge (v1 lock candidate)
 # key=value, comma-lists, # comments
 # ============================================================
 

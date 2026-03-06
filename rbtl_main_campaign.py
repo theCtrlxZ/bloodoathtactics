@@ -1,11 +1,11 @@
-# rbtl_main_campaign.py
+# bare_main_campaign.py
 import os
 import random
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
 import rbtl_campaign as rbtl_campaign
-print("Using rbtl_campaign from:", rbtl_campaign.__file__)
+print("Using bare_campaign from:", rbtl_campaign.__file__)
 
 from rbtl_cli import BACK, QUIT, RESTART, _parse_campaign_key, _quest_board_entries, prompt_choice_nav, prompt_int_nav
 from rbtl_campaign import (
