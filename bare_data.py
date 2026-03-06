@@ -6,13 +6,13 @@
 # (Keep these as comment-only rules to prevent “mystery bugs.”)
 #
 # [IO / DATA LOADING]
-# 1) ONLY rbtl_data.py may touch the filesystem for game data:
+# 1) ONLY bare_data.py may touch the filesystem for game data:
 #    - load_pipe_file(...)
 #    - load_settings(...)
 #    - open("data/*.txt")
 #    - DATA_DIR / PROJECT_ROOT path construction for data files
 #
-# 2) rbtl_core.py and rbtl_cli.py must be IO-free for data.
+# 2) bare_core.py and bare_cli.py must be IO-free for data.
 #    They may:
 #      - read DataBundle fields
 #      - generate strings
@@ -46,7 +46,7 @@
 #
 # [OUTPUT IO]
 # 9) Writing output files is allowed ONLY in the tiny _main_ script,
-#    not in rbtl_core.py (preferred).
+#    not in bare_core.py (preferred).
 #
 # [SEARCH / AUDIT]
 # 10) To audit for violations, search the repo for:
@@ -55,10 +55,10 @@
 #     - "open("
 #     - "DATA_DIR"
 #     - "PROJECT_ROOT"
-#     and ensure data IO only appears in rbtl_data.py and mains.
+#     and ensure data IO only appears in bare_data.py and mains.
 #
 # RULE: Core modules do not read /data directly.
-# If you need a dataset, add it to DataBundle in rbtl_data.py and pass it in.
+# If you need a dataset, add it to DataBundle in bare_data.py and pass it in.
 # ============================================================
 
 # bare_data.py
@@ -143,7 +143,7 @@ def parse_directives(chunks: List[str]) -> List[str]:
 
 
 # ============================================================
-# Settings (IO) + Settings accessors (for rbtl_core.py)
+# Settings (IO) + Settings accessors (for bare_core.py)
 # ============================================================
 
 def load_settings(path: str) -> Dict[str, str]:
