@@ -8,8 +8,8 @@ import textwrap
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from rbtl_core import weighted_choice, entry_weight
-from rbtl_data import DataBundle, s_get_float, s_get_list
+from bare_core import weighted_choice, entry_weight
+from bare_data import DataBundle, s_get_float, s_get_list
 
 
 # ============================================================
@@ -133,7 +133,7 @@ def _fmt_tags(tags: Set[str]) -> str:
 def _resolve_seed(inputs: Dict[str, Any]) -> int:
     raw = inputs.get("seed")
     if raw is None:
-        raw = os.environ.get("BARE_SEED") or os.environ.get("RBTL_SEED")
+        raw = os.environ.get("BARE_SEED") or os.environ.get("bare_SEED")
     if raw is not None:
         try:
             return int(raw)
@@ -500,7 +500,7 @@ def threat_weight_with_settings(
 ) -> float:
     """Weight for random.choices() when selecting from an eligible threat pool.
 
-    Base: rarity weight (same as rbtl_core.weighted_choice).
+    Base: rarity weight (same as bare_core.weighted_choice).
     Multipliers:
       - threat row weight=... if present (float)
       - max settings threat_weight.<tag> across threat tags
