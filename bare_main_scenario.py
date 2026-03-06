@@ -2,9 +2,9 @@
 import os
 from typing import Any, Tuple
 
-from rbtl_data import load_data_bundle
-from rbtl_cli import run_cli
-from rbtl_core import generate_scenario
+from bare_data import load_data_bundle
+from bare_cli import run_cli
+from bare_core import generate_scenario
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -43,3 +43,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
